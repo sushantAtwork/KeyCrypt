@@ -9,6 +9,6 @@ app2 = FastAPI()
 app.models.Base.metadata.create_all(engine)
 
 
-@app2.post("")
+@app2.post("/")
 def first():
     return {"message": "working"}
