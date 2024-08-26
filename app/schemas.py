@@ -5,14 +5,18 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+    class Config():
+        orm_mode = True
+
 
 class UserResponse(BaseModel):
-    id: int
     username: str
     email: str
-    hashed_password: str
     is_active: bool
-    phone_number: int
+    phone_number: str
+
+    class Config():
+        orm_mode = True
 
 
 class UserRequest(BaseModel):
@@ -20,7 +24,10 @@ class UserRequest(BaseModel):
     email: str
     hashed_password: str
     is_active: bool
-    phone_number: int
+    phone_number: str
+
+    class Config():
+        orm_mode = True
 
 
 class KeyRequest(BaseModel):
@@ -33,5 +40,5 @@ class KeyResponse(BaseModel):
     key: str
     value: str
 
-    class Config:
+    class Config():
         orm_mode = True

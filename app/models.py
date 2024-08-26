@@ -5,7 +5,7 @@ from .database import Base
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "user"  # Table name is 'user'
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True)
@@ -14,17 +14,19 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     phone_number = Column(String(50))
 
-    # One-to-Many relationship with Key
+    # Relationship with the Key model
     keys = relationship("Key", back_populates="user")
 
 
 class Key(Base):
-    __tablename__ = "keys"
+    __tablename__ = "keys"  # Table name is 'keys'
 
     id = Column(Integer, primary_key=True, index=True)
     key_name = Column(String(50), index=True)
     key_value = Column(String(255))
-    user_id = Column(Integer, ForeignKey("user.id"))
 
-    # Many-to-One relationship with User
-    owner = relationship("User", back_populates="keys")
+    # Correct ForeignKey reference
+    user_id = Column(Integer, ForeignKey('user.id'))  # ForeignKey references 'user.id'
+
+    # Relationship with the User model
+    user = relationship("User", back_populates="keys")

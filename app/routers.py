@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import schemas, crud
-from database import get_db
+from app.database import get_db
+from app.utils import convert_user_to_user_response
 
 router = APIRouter(
     prefix="/user",
@@ -12,21 +13,28 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=schemas.UserResponse)
+@router.post("/add", response_model=schemas.UserResponse)
 def create_user(user: schemas.UserRequest, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    return crud.create_user(db=db, user=user)
+    created_user = crud.create_user(db, user)
+    user_response = convert_user_to_user_response(created_user)
+    return user_response
 
 
 @router.post("/", response_model=schemas.UserResponse)
-def user_login(user: schemas.UserLogin, db: Session = Depends(get_db())):
+def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
+    print(f'Db user her : {db_user}')
     if db_user == None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User Not Found")
     else:
-        print("Need to implement authentication")
+        user = crud.user_login(db, user)
+        if user is None:
+            return None
+        else:
+            print(f'USer is loggined {user}')
 
 
 @router.get("/", response_model=List[schemas.UserResponse])
