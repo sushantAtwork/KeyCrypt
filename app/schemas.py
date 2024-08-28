@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -10,9 +12,9 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
+    id: int
     username: str
     email: str
-    is_active: bool
     phone_number: str
 
     class Config():
@@ -23,7 +25,6 @@ class UserRequest(BaseModel):
     username: str
     email: str
     hashed_password: str
-    is_active: bool
     phone_number: str
 
     class Config():
@@ -33,12 +34,28 @@ class UserRequest(BaseModel):
 class KeyRequest(BaseModel):
     key: str
     value: str
+    type: str
+
+    class Config():
+        orm_mode = True
+        from_attributes = True
 
 
 class KeyResponse(BaseModel):
     id: int
     key: str
     value: str
+    type: str
 
     class Config():
         orm_mode = True
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None

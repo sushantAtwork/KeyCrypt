@@ -24,6 +24,7 @@ class Key(Base):
     id = Column(Integer, primary_key=True, index=True)
     key_name = Column(String(50), index=True)
     key_value = Column(String(255))
+    key_type = Column(String(255))
 
     # Correct ForeignKey reference
     user_id = Column(Integer, ForeignKey('user.id'))  # ForeignKey references 'user.id'

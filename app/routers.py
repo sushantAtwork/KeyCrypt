@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import schemas, crud
+from app.auth import generate_token, get_current_user
 from app.database import get_db
 from app.utils import convert_user_to_user_response
 
@@ -13,20 +14,23 @@ router = APIRouter(
 )
 
 
-@router.post("/add", response_model=schemas.UserResponse)
+
+#### USERS
+
+@router.post("/add")
 def create_user(user: schemas.UserRequest, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     created_user = crud.create_user(db, user)
     user_response = convert_user_to_user_response(created_user)
-    return user_response
+    token = generate_token({'sub': user.email})
+    return {"response": user_response, "token": token}
 
 
-@router.post("/", response_model=schemas.UserResponse)
+@router.post("/")
 def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
-    print(f'Db user her : {db_user}')
     if db_user == None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User Not Found")
     else:
@@ -34,7 +38,9 @@ def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         if user is None:
             return None
         else:
-            print(f'USer is loggined {user}')
+            token = generate_token({'sub': user.email})
+            user_response = convert_user_to_user_response(user)
+    return {"response": user_response, "token": token}
 
 
 @router.get("/", response_model=List[schemas.UserResponse])
@@ -51,22 +57,32 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.post("/{user_id}/keys/", response_model=schemas.KeyResponse)
-def create_key_for_user(user_id: int, key: schemas.KeyRequest, db: Session = Depends(get_db)):
-    return crud.create_key(db=db, key=key, user_id=user_id)
+##### KEYS
 
 
-@router.get("/{user_id}/keys/", response_model=List[schemas.KeyResponse])
+@router.post("/{user_id}/keys/")
+def create_key_for_user(user_id: int, key_req: schemas.KeyRequest, db: Session = Depends(get_db)):
+    try:
+        crud.create_key(db=db, key=key_req, user_id=user_id)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Something went wrong {e}')
+    return {"message": "Key created successfully"}
+
+
+@router.get("/{user_id}/keys/")
 def read_keys(user_id: int, db: Session = Depends(get_db)):
-    keys = crud.get_keys_by_user(db, user_id=user_id)
-    if not keys:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keys not found")
+    try:
+        keys = crud.get_keys_by_user(db, user_id=user_id)
+        if not keys:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keys not found")
+    except Exception as e:
+        raise e
     return keys
 
 
-@router.delete("/keys/{key_id}", response_model=schemas.KeyResponse)
+@router.delete("/keys/{key_id}")
 def delete_key(key_id: int, db: Session = Depends(get_db)):
     db_key = crud.delete_key(db=db, key_id=key_id)
     if db_key is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found")
-    return db_key
+    return {"key": db_key, "status": "deleted"}

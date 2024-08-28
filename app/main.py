@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-
 import app.models
 from app.routers import router
 from app.database import engine
+
 
 app2 = FastAPI()
 

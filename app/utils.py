@@ -1,9 +1,11 @@
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
-from app.schemas import UserResponse
 from app.models import User
+from app.schemas import UserResponse
 
-# Create a CryptContext object
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 pwd_context = CryptContext(schemes=["bcrypt"])
 
 
@@ -16,7 +18,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def convert_user_to_user_response(user: User) -> UserResponse:
-    print(user.id)
     return UserResponse(
         id=user.id,
         username=user.username,
