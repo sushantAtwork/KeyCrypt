@@ -1,10 +1,12 @@
-fastapi
+fastapi[all]
 uvicorn
 sqlalchemy
 pydantic
-mysqlclient
+# mysqlclient # for windows
+pymysql # for linux
 alembic
 passlib
 bcrypt==4.0.1
 pyjwt
 python-dotenv
+cryptography

@@ -8,6 +8,7 @@ from app.auth import generate_token, get_current_user
 from app.database import get_db
 from app.utils import convert_user_to_user_response
 
+
 router = APIRouter(
     prefix="/user",
     tags=["user"]
@@ -61,7 +62,9 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{user_id}/keys/")
-def create_key_for_user(user_id: int, key_req: schemas.KeyRequest, db: Session = Depends(get_db)):
+def create_key_for_user(user_id: int, key_req: schemas.KeyRequest, db: Session = Depends(get_db), 
+                        # current_user: dict = Depends(get_current_user)
+                        ):
     try:
         crud.create_key(db=db, key=key_req, user_id=user_id)
     except Exception as e:

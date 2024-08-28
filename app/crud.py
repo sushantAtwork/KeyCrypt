@@ -1,7 +1,15 @@
 from sqlalchemy.orm import Session
 
-from app.utils import hash_password, verify_password
+from app.utils import (
+    hash_password,
+    verify_password,
+    generate_key,
+    encrypt_string,
+    decrypt_string,
+)
 from . import models, schemas
+
+from cryptography.fernet import Fernet
 
 
 def get_user(db: Session, user_id: int):
@@ -26,7 +34,8 @@ def create_user(db: Session, user: schemas.UserRequest):
         email=user.email,
         hashed_password=hash_password(user.hashed_password),
         is_active=True,
-        phone_number=user.phone_number)
+        phone_number=user.phone_number,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -46,7 +55,7 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserRequest):
         db.refresh(db_user)
     except Exception as e:
         db.rollback()
-        print(f'Error updating user: {e}')
+        print(f"Error updating user: {e}")
     return db_user
 
 
@@ -62,19 +71,30 @@ def user_login(db: Session, user: schemas.UserLogin):
 
 
 def get_keys_by_user(db: Session, user_id: int):
+    genKey = generate_key()
+    key_list = []
     try:
         db_keys = db.query(models.Key).filter(models.Key.user_id == user_id).all()
+        for key in db_keys:
+            saved_key = models.Key()
+            saved_key.id = key.id
+            saved_key.name = key.key_name
+            saved_key.value = decrypt_string(genKey, key.key_value)
+            #    print(f"Key ID: {key.id}, Key Name: {key.key_name}, Key Value: {key.key_value}")
+            key_list.append(saved_key)
+        print(key_list)
     except Exception as e:
         raise e
     return db_keys
 
 
 def create_key(db: Session, key: schemas.KeyRequest, user_id: int):
+    genKey = generate_key()
     db_key = models.Key(
         key_name=key.key,
-        key_value=key.value,
+        key_value=encrypt_string(genKey, key.value),
         key_type=key.type,
-        user_id=user_id
+        user_id=user_id,
     )
     try:
         db.add(db_key)
@@ -84,12 +104,12 @@ def create_key(db: Session, key: schemas.KeyRequest, user_id: int):
             id=db_key.id,
             key=db_key.key_name,
             value=db_key.key_value,
-            type=db_key.key_type
+            type=db_key.key_type,
         )
         return key_response
     except Exception as e:
         db.rollback()
-        print(f'error {e}')
+        print(f"error {e}")
         raise
 
 

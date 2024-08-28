@@ -1,6 +1,9 @@
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
+from cryptography.fernet import Fernet
+
+
 from app.models import User
 from app.schemas import UserResponse
 
@@ -25,3 +28,18 @@ def convert_user_to_user_response(user: User) -> UserResponse:
         is_active=user.is_active,
         phone_number=user.phone_number
     )
+
+def generate_key():
+    return Fernet.generate_key()
+
+# Encrypt the string
+def encrypt_string(key: bytes, plaintext: str) -> str:
+    fernet = Fernet(key)
+    encrypted = fernet.encrypt(plaintext.encode())
+    return encrypted.decode()
+
+# Decrypt the string
+def decrypt_string(key: bytes, encrypted_text: str) -> str:
+    fernet = Fernet(key)
+    decrypted = fernet.decrypt(encrypted_text.encode())
+    return decrypted.decode()
