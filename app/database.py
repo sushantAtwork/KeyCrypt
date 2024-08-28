@@ -1,8 +1,20 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "mysql+pymysql://root:root@localhost/keyCrypt"
+load_dotenv()
+
+USERNAME = os.getenv('db_username')
+PASSWORD = os.getenv('password')
+HOST = os.getenv('host')
+PORT = os.getenv('port', 18186)
+DATABASE = os.getenv('database')
+
+# Construct the DATABASE_URL
+DATABASE_URL = f"mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
