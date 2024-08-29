@@ -2,14 +2,14 @@ from sqlalchemy.orm import Session
 
 from app.utils import (
     hash_password,
-    verify_password,
-    generate_key,
-    encrypt_string,
-    decrypt_string,
+    verify_password
 )
 from . import models, schemas
 
-from cryptography.fernet import Fernet
+from app.encryptionUtils import EncryptionUtil
+
+
+crypt = EncryptionUtil()
 
 
 def get_user(db: Session, user_id: int):
@@ -71,7 +71,6 @@ def user_login(db: Session, user: schemas.UserLogin):
 
 
 def get_keys_by_user(db: Session, user_id: int):
-    genKey = generate_key()
     key_list = []
     try:
         db_keys = db.query(models.Key).filter(models.Key.user_id == user_id).all()
@@ -79,20 +78,17 @@ def get_keys_by_user(db: Session, user_id: int):
             saved_key = models.Key()
             saved_key.id = key.id
             saved_key.name = key.key_name
-            saved_key.value = decrypt_string(genKey, key.key_value)
-            #    print(f"Key ID: {key.id}, Key Name: {key.key_name}, Key Value: {key.key_value}")
+            saved_key.value = crypt.decrypt(key.key_value)
             key_list.append(saved_key)
-        print(key_list)
     except Exception as e:
         raise e
-    return db_keys
+    return key_list
 
 
 def create_key(db: Session, key: schemas.KeyRequest, user_id: int):
-    genKey = generate_key()
     db_key = models.Key(
         key_name=key.key,
-        key_value=encrypt_string(genKey, key.value),
+        key_value=crypt.encrypt(key.value),
         key_type=key.type,
         user_id=user_id,
     )

@@ -4,16 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import schemas, crud
-from app.auth import generate_token, get_current_user
+from app.auth import generate_token
 from app.database import get_db
 from app.utils import convert_user_to_user_response
-
+from app.auth import get_current_user
 
 router = APIRouter(
     prefix="/user",
     tags=["user"]
 )
-
 
 
 #### USERS
@@ -58,13 +57,23 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
+@router.put("/update/{user_id}")
+def update_user(user_id: int, user: schemas.UserRequest, db: Session = Depends(get_db)):
+    try:
+        db_user = crud.update_user(user_id=user_id, user_update=user, db=db)
+        if db_user is None:
+            raise Exception
+        else:
+            return {"message": "User Updated Successfully!!!"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error caused {e}")
+
+
 ##### KEYS
 
 
 @router.post("/{user_id}/keys/")
-def create_key_for_user(user_id: int, key_req: schemas.KeyRequest, db: Session = Depends(get_db), 
-                        # current_user: dict = Depends(get_current_user)
-                        ):
+def create_key_for_user(user_id: int, key_req: schemas.KeyRequest, db: Session = Depends(get_db)):
     try:
         crud.create_key(db=db, key=key_req, user_id=user_id)
     except Exception as e:

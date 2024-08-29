@@ -14,7 +14,7 @@ SECRET_KEY = str(os.getenv('jwt_secret_key'))
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRES_MINUTE = 120
 
-oAuth2Scheme = OAuth2PasswordBearer(tokenUrl='auth_utils')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def generate_token(data: dict):
@@ -25,7 +25,7 @@ def generate_token(data: dict):
     return jwt_token
 
 
-def get_current_user(token: str = Depends(oAuth2Scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
         email: str | None = payload.get('sub')
