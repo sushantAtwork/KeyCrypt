@@ -1,10 +1,11 @@
 import os
 from datetime import datetime, timedelta
+from typing import Annotated
 
 import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBasicCredentials
 
 from app.schemas import TokenData
 
@@ -25,7 +26,7 @@ def generate_token(data: dict):
     return jwt_token
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
         email: str | None = payload.get('sub')
@@ -39,15 +40,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return token_data
 
 
-def verify_token(token: str, credentials_exception):
+def verify_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print(payload)
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
         else:
             token_data = TokenData(username=username, token=token)
     except JWTError:
-        raise credentials_exception
+        raise HTTPBasicCredentials
     return token_data

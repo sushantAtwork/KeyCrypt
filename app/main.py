@@ -7,9 +7,7 @@ from app import models
 from app.database import engine
 from app.routers import router
 
-app = FastAPI(
-    title="KeyCrypt",
-)
+app = FastAPI()
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -25,6 +23,7 @@ def custom_openapi():
         description="This is a custom OpenAPI schema for KeyCrypt",
         routes=app.routes,
     )
+    # here security scheme is defined
     openapi_schema["components"]["securitySchemes"] = {
         "BearerAuth": {
             "type": "http",
@@ -41,6 +40,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
+# creates database
 @app.on_event("startup")
 def on_startup():
     models.Base.metadata.create_all(bind=engine)
