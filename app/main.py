@@ -19,7 +19,7 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="KeyCrypt",
-        version="1.0.0",
+        version="1.2.0",
         description="This is a custom OpenAPI schema for KeyCrypt",
         routes=app.routes,
     )
