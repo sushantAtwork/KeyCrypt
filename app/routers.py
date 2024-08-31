@@ -67,6 +67,7 @@ def update_user(user_id: int,
                 db: Session = Depends(get_db),
                 token: Dict = Depends(get_current_user)):
     try:
+        print(token)
         db_user = crud.update_user(user_id=user_id, user_update=user, db=db)
         if db_user is None:
             raise Exception
