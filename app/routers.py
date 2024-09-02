@@ -29,7 +29,7 @@ def create_user(user: schemas.UserRequest, db: Session = Depends(get_db)):
     return {"response": user_response, "token": token}
 
 
-@router.post("/")
+@router.post("/login")
 def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user == None:
@@ -62,7 +62,7 @@ def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 #     return db_user
 
 
-@router.put("/update/{user_id}")
+@router.put("/update/")
 def update_user(
         user: schemas.UserRequest,
         db: Session = Depends(get_db),
@@ -80,7 +80,7 @@ def update_user(
 
 ##### KEYS
 
-@router.post("/add/keys/")
+@router.post("/add/key/")
 def create_key_for_user(
         key_req: schemas.KeyRequest,
         db: Session = Depends(get_db),
@@ -95,7 +95,20 @@ def create_key_for_user(
     return {"message": "Key created successfully"}
 
 
-@router.get("/get/keys")
+@router.put("/update/key/{key_id}")
+def update_key(
+        key_id: int,
+        key_req: schemas.KeyRequest,
+        db: Session = Depends(get_db),
+        token: Dict = Depends(get_current_user)):
+    try:
+        crud.update_key(db=db, key_id=key_id, key=key_req, user_email=token.email)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Key not saved : {e}')
+    return {"Message": "Key Updated Successfully!!"}
+
+
+@router.get("/get/key")
 def read_keys(db: Session = Depends(get_db),
               token: Dict = Depends(get_current_user)):
     try:
@@ -107,7 +120,7 @@ def read_keys(db: Session = Depends(get_db),
     return {"response": keys}
 
 
-@router.delete("/delete/keys/{key_id}")
+@router.delete("/delete/key/{key_id}")
 def delete_key(key_id: int,
                db: Session = Depends(get_db),
                token: Dict = Depends(get_current_user)):

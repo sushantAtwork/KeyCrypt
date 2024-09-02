@@ -130,3 +130,5 @@ cython_debug/
 .idea
 
 .env
+
+keycrypt

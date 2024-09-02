@@ -15,6 +15,8 @@ class User(Base):
     phone_number = Column(String(50))
 
     keys = relationship("Key", back_populates="user")
+    updated_at = Column(String(50))
+    created_at = Column(String(50))
 
 
 class Key(Base):
@@ -26,5 +28,7 @@ class Key(Base):
     key_type = Column(String(255))
 
     user_id = Column(Integer, ForeignKey('user.id'))
+    updated_at = Column(String(50))
+    created_at = Column(String(50))
 
     user = relationship("User", back_populates="keys")
