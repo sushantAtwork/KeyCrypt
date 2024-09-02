@@ -34,8 +34,8 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not authorized',
                                 headers={'WWW-Authenticate': 'Bearer'})
         token_data = TokenData(email=email)
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not authorized',
+    except jwt.PyJWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f'User not authorized : {e}',
                             headers={'WWW-Authenticate': 'Bearer'})
     return token_data
 

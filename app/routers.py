@@ -7,6 +7,7 @@ from app import schemas, crud
 from app.auth import generate_token
 from app.auth import get_current_user
 from app.database import get_db
+from app.exception import MissingKeyFieldException
 from app.utils import convert_user_to_user_response
 
 router = APIRouter(
@@ -62,13 +63,13 @@ def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 
 
 @router.put("/update/{user_id}")
-def update_user(user_id: int,
-                user: schemas.UserRequest,
-                db: Session = Depends(get_db),
-                token: Dict = Depends(get_current_user)):
+def update_user(
+        user: schemas.UserRequest,
+        db: Session = Depends(get_db),
+        token: Dict = Depends(get_current_user)):
     try:
         print(token)
-        db_user = crud.update_user(user_id=user_id, user_update=user, db=db)
+        db_user = crud.update_user(user_email=token.email, user_update=user, db=db)
         if db_user is None:
             raise Exception
         else:
@@ -79,39 +80,41 @@ def update_user(user_id: int,
 
 ##### KEYS
 
-@router.post("/{user_id}/keys/")
+@router.post("/add/keys/")
 def create_key_for_user(
-        user_id: int,
         key_req: schemas.KeyRequest,
         db: Session = Depends(get_db),
         token: Dict = Depends(get_current_user)
 ):
     try:
-
-        crud.create_key(db=db, key=key_req, user_id=user_id)
+        crud.create_key(db=db, key=key_req, user_email=token.email)
+    except MissingKeyFieldException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'Something went wrong {e}')
     return {"message": "Key created successfully"}
 
 
-@router.get("/{user_id}/keys/")
-def read_keys(user_id: int,
-              db: Session = Depends(get_db),
+@router.get("/get/keys")
+def read_keys(db: Session = Depends(get_db),
               token: Dict = Depends(get_current_user)):
     try:
-        keys = crud.get_keys_by_user(db, user_id=user_id)
+        keys = crud.get_keys_by_user(db, user_email=token.email)
         if not keys:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keys not found")
+            return {"response": keys}
     except Exception as e:
         raise e
-    return keys
+    return {"response": keys}
 
 
-@router.delete("/keys/{key_id}")
+@router.delete("/delete/keys/{key_id}")
 def delete_key(key_id: int,
                db: Session = Depends(get_db),
                token: Dict = Depends(get_current_user)):
-    db_key = crud.delete_key(db=db, key_id=key_id)
-    if db_key is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found")
+    try:
+        db_key = crud.delete_key(db=db, key_id=key_id, user_email=token.email)
+        if db_key is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found")
+    except MissingKeyFieldException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
     return {"key": db_key, "status": "deleted"}
