@@ -45,7 +45,7 @@ def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
                 user_response = convert_user_to_user_response(user)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f'Message : {e}')
-    return {"response": user_response, "token": token}
+    return {"response": user_response, "token": token, "message": "Welcome Back"}
 
 
 # Will uncomment it later
