@@ -19,10 +19,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def generate_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTE)
-    to_encode.update({'exp': expire})
-    jwt_token = jwt.encode(payload=to_encode, key=SECRET_KEY, algorithm=ALGORITHM)
+    try:
+        to_encode = data.copy()
+        expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTE)
+        to_encode.update({'exp': expire})
+        jwt_token = jwt.encode(payload=to_encode, key=SECRET_KEY, algorithm=ALGORITHM)
+    except Exception as e:
+        raise Exception(f'Failed to generate JWT token {e}')
     return jwt_token
 
 
@@ -45,9 +48,9 @@ def verify_token(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            raise Exception("User does\'nt exist!!!!")
         else:
             token_data = TokenData(username=username, token=token)
-    except JWTError:
+    except Exception:
         raise HTTPBasicCredentials
     return token_data

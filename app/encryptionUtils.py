@@ -1,8 +1,15 @@
 import base64
+import os
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
+from dotenv import load_dotenv
+
+load_dotenv()
+
+aes_key = os.getenv('aes-key')
+cbc_key = os.getenv('cbc-key')
 
 
 class EncryptionUtil:

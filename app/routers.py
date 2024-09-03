@@ -32,15 +32,19 @@ def create_user(user: schemas.UserRequest, db: Session = Depends(get_db)):
 @router.post("/login")
 def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
-    if db_user == None:
+    if db_user is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User Not Found")
     else:
-        user = crud.user_login(db, user)
-        if user is None:
-            return None
-        else:
-            token = generate_token({'sub': user.email})
-            user_response = convert_user_to_user_response(user)
+        try:
+            user = crud.user_login(db, user)
+            if user is None:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                                    detail='User doesn\'nt exist, Create an account!!!!')
+            else:
+                token = generate_token({'sub': user.email})
+                user_response = convert_user_to_user_response(user)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f'Message : {e}')
     return {"response": user_response, "token": token}
 
 

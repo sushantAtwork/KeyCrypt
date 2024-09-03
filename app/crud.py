@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.encryptionUtils import EncryptionUtil
@@ -74,7 +73,7 @@ def user_login(db: Session, user: schemas.UserLogin):
         if verify_password(user.password, db_user.hashed_password):
             return db_user
         else:
-            return None
+            raise Exception("Invalid Credentials!!")
 
 
 def get_keys_by_user(db: Session, user_email: str):
@@ -101,13 +100,7 @@ def get_key_by_id(db: Session, key_id: int):
         key = db.query(models.Key).filter(models.Key.id == key_id).first()
         if not key:
             raise ValueError(f"No key found with id {key_id}")
-        decrypted_key = {
-            "id": key.id,
-            "name": key.key_name,
-            "value": crypt.decrypt(key.key_value),
-            "type": key.key_type
-        }
-        return decrypted_key
+        return key
     except Exception as e:
         print(f"An error occurred while fetching the key: {e}")
         raise e
@@ -176,31 +169,27 @@ def create_key(db: Session, key: schemas.KeyRequest, user_email: str):
 #         raise
 
 def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: str):
-    saved_key = get_key_by_id(db=db, key_id=key_id)
-    db_user = get_user_by_email(db=db, email=user_email)
-
-    if db_user is None:
-        raise
-
-    if not key.key_name or not key.value or not key.type:
-        raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
-
-    if saved_key is None:
-        raise
-
-    # Correct the field updates and remove trailing commas
-    saved_key.key_name = key.key_name
-    saved_key.key_value = crypt.encrypt(key.value)
-    saved_key.key_type = key.type
-    saved_key.user_id = db_user.id
-    saved_key.updated_at = get_current_date_time()
-
     try:
-        db.add(saved_key)
-        db.commit()
-        db.refresh(saved_key)
+        saved_key = get_key_by_id(db=db, key_id=key_id)
+        db_user = get_user_by_email(db=db, email=user_email)
+        if db_user is None:
+            raise Exception("User does\'nt exist!!!")
+        if key.key is '' or key.value is '' or key.type is '':
+            raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
+        if saved_key is None:
+            raise Exception("Key not found!!!!")
+        else:
+            saved_key.name = key.key
+            saved_key.key_value = crypt.encrypt(key.value)
+            saved_key.key_type = key.type
+            saved_key.user_id = db_user.id
+            saved_key.updated_at = get_current_date_time()
 
-        # Correct attribute names for KeyResponse
+            db.add(saved_key)
+            db.commit()
+            db.refresh(saved_key)
+
+            # Correct attribute names for KeyResponse
         key_response = schemas.KeyResponse(
             id=saved_key.id,
             key=saved_key.key_name,
@@ -211,7 +200,7 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
     except Exception as e:
         db.rollback()
         print(f"Error: {e}")
-        raise
+        raise Exception(f'Error in updating keys : {e}')
 
 
 def delete_key(db: Session, key_id: int, user_email: str):
