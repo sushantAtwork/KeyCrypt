@@ -1,0 +1,24 @@
+.container {
+    /* background-color: red; */
+    padding: 2;
+    border-radius: 1;
+}
+
+.container h1 {
+    font-size: 2.5rem;
+}
+
+.container p {
+    font-size: 1.5rem;
+}
+
+.box {
+   /* background-color: cadetblue; */
+   height: 50vh;
+   width: 100%;
+   padding: 4rm;
+   border-radius: 2;
+   display:inline-table;
+   justify-content: center;
+   margin-top: 2%;
+}
