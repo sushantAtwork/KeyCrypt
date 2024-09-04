@@ -1,4 +1,4 @@
-FROM node:14-alpine as nodework
+FROM node:18-alpine as nodework
 
 WORKDIR /myapp
 
