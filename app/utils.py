@@ -1,7 +1,9 @@
+import re
+from datetime import datetime
+
 from cryptography.fernet import Fernet
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from datetime import datetime
 
 from app.models import User
 from app.schemas import UserResponse
@@ -50,3 +52,31 @@ def decrypt_string(key: bytes, encrypted_text: str) -> str:
 def get_current_date_time():
     current_datetime = datetime.now()
     return current_datetime.strftime("%d-%m-%Y %H:%M:%S")
+
+
+def validateEmail(email: str) -> bool:
+    # Define the regular expression for a valid email address
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+    # Use re.match() to check if the email matches the pattern
+    if re.match(email_regex, email):
+        return True
+    else:
+        return False
+
+
+def validatePassword(password: str) -> bool:
+    # Define the regular expression for a valid password
+    password_regex = (
+        r'^(?=.*[a-z])'  # At least one lowercase letter
+        r'(?=.*[A-Z])'  # At least one uppercase letter
+        r'(?=.*\d)'  # At least one digit
+        r'(?=.*[@$!%*?&])'  # At least one special character
+        r'[A-Za-z\d@$!%*?&]{8,}$'  # Minimum 8 characters long
+    )
+
+    # Use re.match() to check if the password matches the pattern
+    if re.match(password_regex, password):
+        return True
+    else:
+        return False

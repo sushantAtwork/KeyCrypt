@@ -132,3 +132,5 @@ cython_debug/
 .env
 
 keycrypt
+
+node_modules

@@ -4,10 +4,12 @@ from app.encryptionUtils import EncryptionUtil
 from app.utils import (
     hash_password,
     verify_password,
-    get_current_date_time
+    get_current_date_time,
+    validateEmail,
+    validatePassword
 )
 from . import models, schemas
-from .exception import MissingKeyFieldException
+from .exception import MissingKeyFieldException, InvalidValidation, EntityNotExist
 
 crypt = EncryptionUtil()
 
@@ -32,6 +34,10 @@ def create_user(db: Session, user: schemas.UserRequest):
     if user.email is '' or user.username is '' or user.hashed_password is '' or user.phone_number is '':
         raise MissingKeyFieldException(
             "One or more required fields (email, username, password, phone_number) are missing.")
+    if validateEmail(user.email) is False:
+        raise InvalidValidation("Email is not validated!!!!")
+    if validatePassword(user.hashed_password) is False:
+        raise InvalidValidation("Password is not validated!!!!")
     db_user = models.User(
         username=user.username,
         email=user.email,
@@ -49,8 +55,10 @@ def create_user(db: Session, user: schemas.UserRequest):
 def update_user(db: Session, user_email: str, user_update: schemas.UserRequest):
     user = get_user_by_email(db=db, email=user_email)
     if user is None:
-        raise Exception
+        raise EntityNotExist("User not exist!!!!!")
     else:
+        if validatePassword(user_update.hashed_password) is False:
+            raise InvalidValidation("Password is not validated!!!!")
         user.username = user_update.username
         user.email = user_update.email
         user.hashed_password = hash_password(user_update.hashed_password)
@@ -68,7 +76,7 @@ def update_user(db: Session, user_email: str, user_update: schemas.UserRequest):
 def user_login(db: Session, user: schemas.UserLogin):
     db_user = get_user_by_email(db, user.email)
     if db_user is None:
-        raise Exception("User not exist")
+        raise EntityNotExist("User not exist")
     else:
         if verify_password(user.password, db_user.hashed_password):
             return db_user
@@ -173,11 +181,11 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
         saved_key = get_key_by_id(db=db, key_id=key_id)
         db_user = get_user_by_email(db=db, email=user_email)
         if db_user is None:
-            raise Exception("User does\'nt exist!!!")
+            raise EntityNotExist("User does\'nt exist!!!")
         if key.key is '' or key.value is '' or key.type is '':
             raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
         if saved_key is None:
-            raise Exception("Key not found!!!!")
+            raise EntityNotExist("Key not found!!!!")
         else:
             saved_key.name = key.key
             saved_key.key_value = crypt.encrypt(key.value)
@@ -206,7 +214,7 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
 def delete_key(db: Session, key_id: int, user_email: str):
     user = get_user_by_email(db=db, email=user_email)
     if user is None:
-        raise Exception
+        raise EntityNotExist("User not exist!!!!")
     else:
         if key_id is '':
             raise MissingKeyFieldException("Key ID is missing.")

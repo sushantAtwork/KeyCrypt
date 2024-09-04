@@ -9,6 +9,9 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.exception import MissingKeyFieldException
 from app.utils import convert_user_to_user_response
+from app.exception import InvalidValidation
+from pymysql.err import IntegrityError
+import sqlalchemy
 
 router = APIRouter(
     prefix="/user",
@@ -20,12 +23,17 @@ router = APIRouter(
 
 @router.post("/add")
 def create_user(user: schemas.UserRequest, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    created_user = crud.create_user(db, user)
-    user_response = convert_user_to_user_response(created_user)
-    token = generate_token({'sub': user.email})
+    try:
+        db_user = crud.get_user_by_email(db, email=user.email)
+        if db_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+        created_user = crud.create_user(db, user)
+        user_response = convert_user_to_user_response(created_user)
+        token = generate_token({'sub': user.email})
+    except sqlalchemy.exc.IntegrityError or IntegrityError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Exception : Username Exist!!!')
+    except InvalidValidation as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Exception : {e}')
     return {"response": user_response, "token": token}
 
 
@@ -45,7 +53,7 @@ def user_login(user: schemas.UserLogin, db: Session = Depends(get_db)):
                 user_response = convert_user_to_user_response(user)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f'Message : {e}')
-    return {"response": user_response, "token": token, "message": "Welcome Back"}
+    return {"response": user_response, "token": token}
 
 
 # Will uncomment it later
