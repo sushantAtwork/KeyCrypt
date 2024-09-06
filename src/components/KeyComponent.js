@@ -18,6 +18,7 @@ export default function KeyComponent({
         alignItems: "center",
         backgroundColor: "#e0f7fa",
         padding: "10px",
+        marginTop : "10px",
         marginBottom: "10px",
         borderRadius: "8px",
         boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
@@ -27,7 +28,7 @@ export default function KeyComponent({
         <img
           src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg"
           alt="Key"
-          style={{ width: "140px", height: "140px", borderRadius: "4px" }}
+          style={{ width: "80px", height: "80px", borderRadius: "4px" }}
         />
       </Box>
       <Box sx={{ flexGrow: 1 }}>

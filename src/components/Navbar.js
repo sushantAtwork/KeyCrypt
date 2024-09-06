@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Typography, Button } from '@mui/joy';
+import { Box, Typography, Button, Divider } from '@mui/joy';
 
 function Navbar() {
   return (
+    <>
     <Box
       sx={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '0 16px',
-        backgroundColor: 'blue',
-        color: 'white',
+        backgroundColor: '#111518',
         height: '64px',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
       }}
@@ -25,6 +25,7 @@ function Navbar() {
           color: 'white',
           display: 'flex',
           alignItems: 'center',
+          fontSize: '1.8rem'
         }}
       >
         KeyCrypt
@@ -48,6 +49,8 @@ function Navbar() {
         </Button>
       </Box>
     </Box>
+    <Divider sx={{height: '1.5px', color: 'white'}}/>
+    </>
   );
 }
 
