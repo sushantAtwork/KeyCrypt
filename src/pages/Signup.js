@@ -4,12 +4,19 @@ import CustomInput from '../components/CustomInput';
 import '../assets/css/pages/Signup.css';
 import { signupUser } from '../service/SignupApi';
 import { useNavigate, Link } from "react-router-dom";
+import CustomSnackBar from '../components/CustomSnackBar';
 
 export default function Signup() {
 
 const [token, setToken] = useState('');
 
 const navigate = useNavigate();
+
+const [snackBar, setSnackBar] = useState({
+  open: false,
+  message: "",
+  color: "",
+});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -93,8 +100,15 @@ const navigate = useNavigate();
           console.log('Signup successful', result);
           const newName = result.token;
           setToken(newName);
-          localStorage.setItem('token', newName);
-          navigate("/home");
+          localStorage.setItem('token', newName); 
+          setSnackBar({
+            open: true,
+            message: result.message || `Welcome ${result.username}!!!`,
+            color: "success",
+          });
+          setTimeout(() => {
+            navigate("/home");
+          }, 1000);
         }
       } catch (error) {
         console.error('Signup failed:', error);
@@ -194,6 +208,14 @@ const navigate = useNavigate();
           </Button>
         </Box>
       </form>
+      {snackBar.open && (
+        <CustomSnackBar
+          message={snackBar.message}
+          open={snackBar.open}
+          color={snackBar.severity}
+          onClose={() => setSnackBar({ ...snackBar, open: false })}
+        />
+      )}
     </Container>
   );
 }

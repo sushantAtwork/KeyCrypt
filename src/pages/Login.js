@@ -1,27 +1,32 @@
-import { Box, Button, Checkbox, Container, Typography } from '@mui/joy';
-import React, { useState } from 'react';
-import CustomInput from '../components/CustomInput';
-import '../assets/css/pages/Signup.css';
-import { loginUser } from '../service/LoginApi';
+import { Box, Button, Checkbox, Container, Typography } from "@mui/joy";
+import React, { useState } from "react";
+import CustomInput from "../components/CustomInput";
+import "../assets/css/pages/Signup.css";
+import { loginUser } from "../service/LoginApi";
 import { useNavigate } from "react-router-dom";
-import CustomSnackBar from '../components/CustomSnackBar';
+import CustomSnackBar from "../components/CustomSnackBar";
 
+//['primary', 'neutral', 'danger', 'success', 'warning']
 
 export default function Login() {
-  const [token, setToken] = useState('');
-  const [response, setReponse] = useState();
-  const [snackBar, setSnackBar] = useState(false);
+  const [token, setToken] = useState("");
+  const [snackBar, setSnackBar] = useState({
+    open: false,
+    message: "",
+    color: "",
+  });
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     termsAccepted: false,
   });
 
   const [errors, setErrors] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleInputChange = (e) => {
@@ -40,23 +45,23 @@ export default function Login() {
     });
     setErrors({
       ...errors,
-      termsAccepted: e.target.checked ? '' : 'You must accept the terms.',
+      termsAccepted: e.target.checked ? "" : "You must accept the terms.",
     });
   };
 
   const validateField = (name, value) => {
     switch (name) {
-      case 'email':
+      case "email":
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         setErrors((prevErrors) => ({
           ...prevErrors,
-          email: !emailRegex.test(value) ? 'Invalid email address.' : '',
+          email: !emailRegex.test(value) ? "Invalid email address." : "",
         }));
         break;
-      case 'password':  // Changed to `password`
+      case "password":
         setErrors((prevErrors) => ({
           ...prevErrors,
-          password: value.length < 6 ? 'Password is too short.' : '',
+          password: value.length < 6 ? "Password is too short." : "",
         }));
         break;
       default:
@@ -66,24 +71,41 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (Object.values(errors).every((error) => error === '') && formData.termsAccepted) {
-      try {
-        const result = await loginUser(formData);
-        setReponse(result);
-        if (result.status === 200) {
-          const newName = result.token;
-          setToken(newName);
-          localStorage.setItem('token', newName);
+    if (
+      Object.values(errors).some((error) => error !== "") ||
+      !formData.termsAccepted
+    ) {
+      alert("Please fix the errors before submitting.");
+      return;
+    }
+
+    try {
+      const result = await loginUser(formData);
+      if (result.token !== undefined) {
+        const token = result.token;
+        setToken(token);
+        localStorage.setItem("token", token);
+        setSnackBar({
+          open: true,
+          message: result.message || `Welcome ${result.username}!!!`,
+          color: "success",
+        });
+        setTimeout(() => {
           navigate("/home");
-          setSnackBar(true);
-        }else{
-          setSnackBar(true);
-        }
-      } catch (error) {
-        console.error('Signup failed:', error);
+        }, 1000);
+      } else {
+        setSnackBar({
+          open: true,
+          message: result.message || "Login failed!",
+          color: "danger",
+        });
       }
-    } else {
-      alert('Please fix the errors before submitting.');
+    } catch (error) {
+      setSnackBar({
+        open: true,
+        message: "Login failed!",
+        color: "danger",
+      });
     }
   };
 
@@ -91,24 +113,24 @@ export default function Login() {
     <Container className="container">
       <form onSubmit={handleSubmit}>
         <CustomInput
-          title={'Email'}
-          name={'email'}
-          type={'email'}
-          size={'lg'}
+          title={"Email"}
+          name={"email"}
+          type={"email"}
+          size={"lg"}
           value={formData.email}
           onChange={handleInputChange}
           error={!!errors.email}
           helperText={errors.email}
         />
         <CustomInput
-          title={'Password'}  // Changed to `Password`
-          name={'password'}   // Changed to `password`
-          type={'password'}   // Changed to `password` input type
-          size={'lg'}
-          value={formData.password}  // Changed to `password`
+          title={"Password"}
+          name={"password"}
+          type={"password"}
+          size={"lg"}
+          value={formData.password}
           onChange={handleInputChange}
-          error={!!errors.password}  // Changed to `password`
-          helperText={errors.password}  // Changed to `password`
+          error={!!errors.password}
+          helperText={errors.password}
         />
         <Box mt={2}>
           <Checkbox
@@ -120,19 +142,29 @@ export default function Login() {
             <Typography color="error">{errors.termsAccepted}</Typography>
           )}
         </Box>
-        <Box width={'50%'}>
+        <Box width={"50%"}>
           <Button
-            variant='soft'
-            sx={{ margin: '3rem 10px' }}
+            variant="soft"
+            sx={{ margin: "3rem 10px" }}
             fullWidth
-            type='submit'
-            disabled={!formData.termsAccepted || Object.values(errors).some(Boolean)}
+            type="submit"
+            disabled={
+              !formData.termsAccepted || Object.values(errors).some(Boolean)
+            }
           >
             Sign Up
           </Button>
         </Box>
       </form>
-      { response ?  <CustomSnackBar message={response.message} open={snackBar} onClose={() => setSnackBar(false)}/> : <></>}
+
+      {snackBar.open && (
+        <CustomSnackBar
+          message={snackBar.message}
+          open={snackBar.open}
+          color={snackBar.severity}
+          onClose={() => setSnackBar({ ...snackBar, open: false })}
+        />
+      )}
     </Container>
   );
 }
