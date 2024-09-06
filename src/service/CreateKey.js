@@ -28,7 +28,7 @@ export const createKey = async (keyData) => {
         return response.json();
 
     } catch (error) {
-        console.error('Error during signup:', error);
+        // console.error('Error during signup:', error);
         return null;
     }
 };

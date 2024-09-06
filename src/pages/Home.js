@@ -56,7 +56,7 @@ export default function Home() {
         const keys = await getKeys();
         setData(keys.response);
       } catch (error) {
-        console.error('Error fetching keys:', error);
+        // console.error('Error fetching keys:', error);
       }
     };
 

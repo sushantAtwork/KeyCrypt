@@ -6,11 +6,13 @@ import { loginUser } from "../service/LoginApi";
 import { useNavigate } from "react-router-dom";
 import CustomSnackBar from "../components/CustomSnackBar";
 import Navbar from "../components/Navbar";
+import { BarLoader, BeatLoader, BounceLoader, CircleLoader, ClimbingBoxLoader, ClipLoader, ClockLoader, DotLoader, FadeLoader, GridLoader, MoonLoader, PulseLoader, RiseLoader, ScaleLoader, SyncLoader } from 'react-spinners';
 
 //['primary', 'neutral', 'danger', 'success', 'warning']
 
 export default function Login() {
   const [token, setToken] = useState("");
+  const [loading, isLoading] = useState(false);
   const [snackBar, setSnackBar] = useState({
     open: false,
     message: "",
@@ -71,6 +73,7 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
+    isLoading(true);
     e.preventDefault();
     if (
       Object.values(errors).some((error) => error !== "") ||
@@ -107,68 +110,80 @@ export default function Login() {
         message: "Login failed!",
         color: "danger",
       });
+    } finally {
+      isLoading(false);
     }
   };
 
   return (
     <div>
       <Navbar />
-      <Container className="container">
-        <form onSubmit={handleSubmit}>
-          <CustomInput
-            title={"Email"}
-            name={"email"}
-            type={"email"}
-            size={"lg"}
-            value={formData.email}
-            onChange={handleInputChange}
-            error={!!errors.email}
-            helperText={errors.email}
-          />
-          <CustomInput
-            title={"Password"}
-            name={"password"}
-            type={"password"}
-            size={"lg"}
-            value={formData.password}
-            onChange={handleInputChange}
-            error={!!errors.password}
-            helperText={errors.password}
-          />
-          <Box mt={2}>
-            <Checkbox
-              checked={formData.termsAccepted}
-              onChange={handleCheckboxChange}
-              label="I accept the terms and conditions"
+      {loading ?
+        <Box sx={{display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '90vh',
+          width: '100%',
+          opacity: 1}}>
+          <CircleLoader size={150} color="#9C75FE" />
+        </Box>
+        :
+        <Container className="container">
+          <form onSubmit={handleSubmit}>
+            <CustomInput
+              title={"Email"}
+              name={"email"}
+              type={"email"}
+              size={"lg"}
+              value={formData.email}
+              onChange={handleInputChange}
+              error={!!errors.email}
+              helperText={errors.email}
             />
-            {errors.termsAccepted && (
-              <Typography color="error">{errors.termsAccepted}</Typography>
-            )}
-          </Box>
-          <Box width={"50%"}>
-            <Button
-              variant="soft"
-              sx={{ margin: "3rem 10px" }}
-              fullWidth
-              type="submit"
-              disabled={
-                !formData.termsAccepted || Object.values(errors).some(Boolean)
-              }
-            >
-              Sign Up
-            </Button>
-          </Box>
-        </form>
+            <CustomInput
+              title={"Password"}
+              name={"password"}
+              type={"password"}
+              size={"lg"}
+              value={formData.password}
+              onChange={handleInputChange}
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <Box mt={2}>
+              <Checkbox
+                checked={formData.termsAccepted}
+                onChange={handleCheckboxChange}
+                label="I accept the terms and conditions"
+              />
+              {errors.termsAccepted && (
+                <Typography color="error">{errors.termsAccepted}</Typography>
+              )}
+            </Box>
+            <Box width={"50%"}>
+              <Button
+                variant="soft"
+                sx={{ margin: "3rem 10px" }}
+                fullWidth
+                type="submit"
+                disabled={
+                  !formData.termsAccepted || Object.values(errors).some(Boolean)
+                }
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </form>
 
-        {snackBar.open && (
-          <CustomSnackBar
-            message={snackBar.message}
-            open={snackBar.open}
-            color={snackBar.severity}
-            onClose={() => setSnackBar({ ...snackBar, open: false })}
-          />
-        )}
-      </Container>
+          {snackBar.open && (
+            <CustomSnackBar
+              message={snackBar.message}
+              open={snackBar.open}
+              color={snackBar.severity}
+              onClose={() => setSnackBar({ ...snackBar, open: false })}
+            />
+          )}
+        </Container>}
     </div>
   );
 }

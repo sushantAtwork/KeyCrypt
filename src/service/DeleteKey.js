@@ -22,7 +22,7 @@ export const deleteKey = async (keyId) => {
         return response.json();
 
     } catch (error) {
-        console.error('Error during signup:', error);
+        // console.error('Error during signup:', error);
         return null;
     }
 };
