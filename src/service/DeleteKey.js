@@ -1,13 +1,14 @@
 import AuthHeader from "../utils/AuthHeader";
 
-export const getKeys = async () => {
+export const deleteKey = async (keyId) => {
 
     const baseUrl = process.env.REACT_APP_BASE_URL;
-    const url = `${baseUrl}/user/get/key`;
+    const url = `${baseUrl}/user/delete/key/${keyId}`;
+
 
     try {
         const response = await fetch(url, {
-            method: 'GET',
+            method: 'DELETE',
             headers: AuthHeader()
         });
 

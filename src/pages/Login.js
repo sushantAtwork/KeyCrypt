@@ -5,6 +5,7 @@ import "../assets/css/pages/Signup.css";
 import { loginUser } from "../service/LoginApi";
 import { useNavigate } from "react-router-dom";
 import CustomSnackBar from "../components/CustomSnackBar";
+import Navbar from "../components/Navbar";
 
 //['primary', 'neutral', 'danger', 'success', 'warning']
 
@@ -87,7 +88,7 @@ export default function Login() {
         localStorage.setItem("token", token);
         setSnackBar({
           open: true,
-          message: result.message || `Welcome ${result.username}!!!`,
+          message: result.message || `Welcome ${result.response.username}!!!`,
           color: "success",
         });
         setTimeout(() => {
@@ -110,61 +111,64 @@ export default function Login() {
   };
 
   return (
-    <Container className="container">
-      <form onSubmit={handleSubmit}>
-        <CustomInput
-          title={"Email"}
-          name={"email"}
-          type={"email"}
-          size={"lg"}
-          value={formData.email}
-          onChange={handleInputChange}
-          error={!!errors.email}
-          helperText={errors.email}
-        />
-        <CustomInput
-          title={"Password"}
-          name={"password"}
-          type={"password"}
-          size={"lg"}
-          value={formData.password}
-          onChange={handleInputChange}
-          error={!!errors.password}
-          helperText={errors.password}
-        />
-        <Box mt={2}>
-          <Checkbox
-            checked={formData.termsAccepted}
-            onChange={handleCheckboxChange}
-            label="I accept the terms and conditions"
+    <div>
+      <Navbar />
+      <Container className="container">
+        <form onSubmit={handleSubmit}>
+          <CustomInput
+            title={"Email"}
+            name={"email"}
+            type={"email"}
+            size={"lg"}
+            value={formData.email}
+            onChange={handleInputChange}
+            error={!!errors.email}
+            helperText={errors.email}
           />
-          {errors.termsAccepted && (
-            <Typography color="error">{errors.termsAccepted}</Typography>
-          )}
-        </Box>
-        <Box width={"50%"}>
-          <Button
-            variant="soft"
-            sx={{ margin: "3rem 10px" }}
-            fullWidth
-            type="submit"
-            disabled={
-              !formData.termsAccepted || Object.values(errors).some(Boolean)
-            }
-          >
-            Sign Up
-          </Button>
-        </Box>
-      </form>
+          <CustomInput
+            title={"Password"}
+            name={"password"}
+            type={"password"}
+            size={"lg"}
+            value={formData.password}
+            onChange={handleInputChange}
+            error={!!errors.password}
+            helperText={errors.password}
+          />
+          <Box mt={2}>
+            <Checkbox
+              checked={formData.termsAccepted}
+              onChange={handleCheckboxChange}
+              label="I accept the terms and conditions"
+            />
+            {errors.termsAccepted && (
+              <Typography color="error">{errors.termsAccepted}</Typography>
+            )}
+          </Box>
+          <Box width={"50%"}>
+            <Button
+              variant="soft"
+              sx={{ margin: "3rem 10px" }}
+              fullWidth
+              type="submit"
+              disabled={
+                !formData.termsAccepted || Object.values(errors).some(Boolean)
+              }
+            >
+              Sign Up
+            </Button>
+          </Box>
+        </form>
 
-      {snackBar.open && (
-        <CustomSnackBar
-          message={snackBar.message}
-          open={snackBar.open}
-          color={snackBar.severity}
-          onClose={() => setSnackBar({ ...snackBar, open: false })}
-        />
-      )}
-    </Container>
+        {snackBar.open && (
+          <CustomSnackBar
+            message={snackBar.message}
+            open={snackBar.open}
+            color={snackBar.severity}
+            onClose={() => setSnackBar({ ...snackBar, open: false })}
+          />
+        )}
+      </Container>
+    </div>
   );
 }

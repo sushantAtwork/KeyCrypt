@@ -5,18 +5,19 @@ import '../assets/css/pages/Signup.css';
 import { signupUser } from '../service/SignupApi';
 import { useNavigate, Link } from "react-router-dom";
 import CustomSnackBar from '../components/CustomSnackBar';
+import Navbar from '../components/Navbar';
 
 export default function Signup() {
 
-const [token, setToken] = useState('');
+  const [token, setToken] = useState('');
 
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
-const [snackBar, setSnackBar] = useState({
-  open: false,
-  message: "",
-  color: "",
-});
+  const [snackBar, setSnackBar] = useState({
+    open: false,
+    message: "",
+    color: "",
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -39,7 +40,7 @@ const [snackBar, setSnackBar] = useState({
   });
 
   const handleInputChange = (e) => {
-    const { name, value} = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
@@ -100,7 +101,7 @@ const [snackBar, setSnackBar] = useState({
           console.log('Signup successful', result);
           const newName = result.token;
           setToken(newName);
-          localStorage.setItem('token', newName); 
+          localStorage.setItem('token', newName);
           setSnackBar({
             open: true,
             message: result.message || `Welcome ${result.username}!!!`,
@@ -120,102 +121,105 @@ const [snackBar, setSnackBar] = useState({
 
 
   return (
-    <Container className="container">
-      <form onSubmit={handleSubmit}>
-        <CustomInput
-          title={'Name'}
-          name={'name'}
-          type={'text'}
-          size={'lg'}
-          value={formData.name}
-          onChange={handleInputChange}
-          error={!!errors.name}
-          helperText={errors.name}
-        />
-        <CustomInput
-          title={'Email'}
-          name={'email'}
-          type={'email'}
-          size={'lg'}
-          value={formData.email}
-          onChange={handleInputChange}
-          error={!!errors.email}
-          helperText={errors.email}
-        />
-        <CustomInput
-          title={'User Name'}
-          name={'username'}
-          type={'text'}
-          size={'lg'}
-          value={formData.username}
-          onChange={handleInputChange}
-          error={!!errors.username}
-          helperText={errors.username}
-        />
-        <CustomInput
-          title={'Phone Number'}
-          name={'phone_number'}
-          type={'text'}
-          size={'lg'}
-          value={formData.phone_number}
-          onChange={handleInputChange}
-          error={!!errors.phone_number}
-          helperText={errors.phone_number}
-        />
-        <CustomInput
-          title={'hashed_password'}
-          name={'hashed_password'}
-          type={'hashed_password'}
-          size={'lg'}
-          value={formData.hashed_password}
-          onChange={handleInputChange}
-          error={!!errors.hashed_password}
-          helperText={errors.hashed_password}
-        />
-        <CustomInput
-          title={'Confirm hashed_password'}
-          name={'confirmPassword'}
-          type={'hashed_password'}
-          size={'lg'}
-          hint={'Min. 8'}
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          error={!!errors.confirmPassword}
-          helperText={errors.confirmPassword}
-        />
-
-        <Box sx={{ display: 'flex', alignItems: 'center', margin: '5px 20px' }}>
-          <Checkbox
-            name={'termsAccepted'}
-            checked={formData.termsAccepted}
-            onChange={handleCheckboxChange}
+    <div>
+      <Navbar />
+      <Container className="container">
+        <form onSubmit={handleSubmit}>
+          <CustomInput
+            title={'Name'}
+            name={'name'}
+            type={'text'}
+            size={'lg'}
+            value={formData.name}
+            onChange={handleInputChange}
+            error={!!errors.name}
+            helperText={errors.name}
           />
-          <Typography sx={{ marginLeft: '8px' }}>
-            Accept terms and conditions
-          </Typography>
-          {errors.termsAccepted && <Typography color="error">{errors.termsAccepted}</Typography>}
-        </Box>
+          <CustomInput
+            title={'Email'}
+            name={'email'}
+            type={'email'}
+            size={'lg'}
+            value={formData.email}
+            onChange={handleInputChange}
+            error={!!errors.email}
+            helperText={errors.email}
+          />
+          <CustomInput
+            title={'User Name'}
+            name={'username'}
+            type={'text'}
+            size={'lg'}
+            value={formData.username}
+            onChange={handleInputChange}
+            error={!!errors.username}
+            helperText={errors.username}
+          />
+          <CustomInput
+            title={'Phone Number'}
+            name={'phone_number'}
+            type={'text'}
+            size={'lg'}
+            value={formData.phone_number}
+            onChange={handleInputChange}
+            error={!!errors.phone_number}
+            helperText={errors.phone_number}
+          />
+          <CustomInput
+            title={'hashed_password'}
+            name={'hashed_password'}
+            type={'hashed_password'}
+            size={'lg'}
+            value={formData.hashed_password}
+            onChange={handleInputChange}
+            error={!!errors.hashed_password}
+            helperText={errors.hashed_password}
+          />
+          <CustomInput
+            title={'Confirm hashed_password'}
+            name={'confirmPassword'}
+            type={'hashed_password'}
+            size={'lg'}
+            hint={'Min. 8'}
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword}
+          />
 
-        <Box width={'50%'}>
-          <Button
-            variant='soft'
-            sx={{ margin: '3rem 10px' }}
-            fullWidth
-            type='submit'
-            disabled={!formData.termsAccepted || Object.values(errors).some(Boolean)}
-          >
-            Sign Up
-          </Button>
-        </Box>
-      </form>
-      {snackBar.open && (
-        <CustomSnackBar
-          message={snackBar.message}
-          open={snackBar.open}
-          color={snackBar.severity}
-          onClose={() => setSnackBar({ ...snackBar, open: false })}
-        />
-      )}
-    </Container>
+          <Box sx={{ display: 'flex', alignItems: 'center', margin: '5px 20px' }}>
+            <Checkbox
+              name={'termsAccepted'}
+              checked={formData.termsAccepted}
+              onChange={handleCheckboxChange}
+            />
+            <Typography sx={{ marginLeft: '8px' }}>
+              Accept terms and conditions
+            </Typography>
+            {errors.termsAccepted && <Typography color="error">{errors.termsAccepted}</Typography>}
+          </Box>
+
+          <Box width={'50%'}>
+            <Button
+              variant='soft'
+              sx={{ margin: '3rem 10px' }}
+              fullWidth
+              type='submit'
+              disabled={!formData.termsAccepted || Object.values(errors).some(Boolean)}
+            >
+              Sign Up
+            </Button>
+          </Box>
+        </form>
+        {snackBar.open && (
+          <CustomSnackBar
+            message={snackBar.message}
+            open={snackBar.open}
+            color={snackBar.severity}
+            onClose={() => setSnackBar({ ...snackBar, open: false })}
+          />
+        )}
+      </Container>
+    </div>
   );
 }

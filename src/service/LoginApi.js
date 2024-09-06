@@ -4,7 +4,7 @@ export const loginUser = async (user) => {
   const baseUrl = process.env.REACT_APP_BASE_URL;
   const url = `${baseUrl}/user/login`;
 
-  const signUpObj = {
+  const loginObj = {
     email: user.email,
     password: user.password,
   };
@@ -13,7 +13,7 @@ export const loginUser = async (user) => {
     const response = await fetch(url, {
       method: "POST",
       headers: AuthHeader(),
-      body: JSON.stringify(signUpObj),
+      body: JSON.stringify(loginObj),
     });
 
     if (!response.ok) {
