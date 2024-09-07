@@ -2,7 +2,7 @@ fastapi[all]
 uvicorn
 sqlalchemy
 pydantic
-mysqlclient # for windows
+# mysqlclient # for windows
 pymysql # for linux
 alembic
 passlib
