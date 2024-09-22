@@ -15,43 +15,73 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String _message = '';
   String _token = '';
+  bool isLoading = false;
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _message = ''; // Reset the message before the login attempt
+        _message = '';
       });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
+              backgroundColor: Colors.blueAccent,
+            ),
+            // child: Image.asset(
+            //   'assets/images/loading.gif',
+            //   fit: BoxFit.cover,
+            //   alignment: Alignment.center,
+            //   height: 150,
+            //   width: 150,
+            // ),
+          );
+        },
+      );
 
       String? username = _emailController.text;
       String? password = _passwordController.text;
 
-      LoginUser loginUser = LoginUser();
-      String? message = await loginUser.loginUser(username, password);
+      try {
+        LoginUser loginUser = LoginUser();
+        String? message = await loginUser.loginUser(username, password);
 
-      setState(() {
-        if (message != null && !message.contains('!')) {
-          _token = message;
-          _message = 'Login successful';
+        setState(() {
+          if (message != null && !message.contains('!')) {
+            _token = message;
+            _message = 'Login successful';
+          } else {
+            _message = 'Error: $message';
+          }
+        });
+
+        Navigator.of(context).pop();
+
+        if (_message == 'Login successful') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_message)),
+          );
+          await Future.delayed(const Duration(seconds: 10));
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Homepage(data: _token)),
+          );
         } else {
-          _message = 'Error: $message';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_message)),
+          );
         }
-      });
+      } catch (e) {
+        Navigator.of(context).pop();
 
-      if (_message == 'Login successful') {
-        // Show success SnackBar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_message)),
-        );
+        setState(() {
+          _message = 'An error occurred: $e';
+        });
 
-        // Navigate to the next page after a short delay
-        await Future.delayed(
-            const Duration(seconds: 1)); // Optional: allow SnackBar to be visible
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Homepage(data: _token)),
-        );
-      } else {
-        // Show error SnackBar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_message)),
         );
@@ -116,6 +146,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
+                
                 onPressed: () {
                   _login();
                 },

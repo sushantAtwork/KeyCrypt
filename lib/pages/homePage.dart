@@ -45,21 +45,20 @@ class _HomepageState extends State<Homepage> {
   }
 
   Future<void> _loadItems() async {
-  if (_database != null) {
-    final List<Map<dynamic, dynamic>> maps = await _database!.query('items');
+    if (_database != null) {
+      final List<Map<dynamic, dynamic>> maps = await _database!.query('items');
 
-    setState(() {
-      _items = List.generate(maps.length, (i) {
-        if (maps[i]['key'] != 'token') {
-          return maps[i]['value'];
-        } else {
-          return null;
-        }
-      }).where((item) => item != null).toList();
-    });
+      setState(() {
+        _items = List.generate(maps.length, (i) {
+          if (maps[i]['key'] != 'token') {
+            return maps[i]['value'];
+          } else {
+            return null;
+          }
+        }).where((item) => item != null).toList();
+      });
+    }
   }
-}
-
 
   @override
   void initState() {
@@ -78,6 +77,8 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
+        titleTextStyle: Theme.of(context).textTheme.bodyLarge,
+        backgroundColor: Color(0xFF111518),
       ),
       body: Center(
         child: Column(
@@ -105,4 +106,3 @@ class _HomepageState extends State<Homepage> {
     );
   }
 }
-

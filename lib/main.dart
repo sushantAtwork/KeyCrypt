@@ -8,7 +8,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-
 Future<void> main() async {
   databaseFactory = databaseFactoryFfi;
   print('Current working directory: ${Directory.current.path}');
@@ -31,6 +30,14 @@ class KeyCrypt extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        scaffoldBackgroundColor: Color(0xFF111518),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: Color(0xFFFFFFFF)),
+          bodyLarge: TextStyle(color: Color(0xFFFFFFFF)), // Default text color
+          // Default text color
+        ),
+      ),
       initialRoute: "/login",
       routes: {
         MyRoutes.loginPageRoute: (context) => const LoginPage(),
