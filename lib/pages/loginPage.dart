@@ -32,13 +32,6 @@ class _LoginPageState extends State<LoginPage> {
               valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
               backgroundColor: Colors.blueAccent,
             ),
-            // child: Image.asset(
-            //   'assets/images/loading.gif',
-            //   fit: BoxFit.cover,
-            //   alignment: Alignment.center,
-            //   height: 150,
-            //   width: 150,
-            // ),
           );
         },
       );

@@ -7,18 +7,18 @@ import 'package:keycrypt_desktop/utils/routes.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 Future<void> main() async {
-  databaseFactory = databaseFactoryFfi;
-  print('Current working directory: ${Directory.current.path}');
-  const envFilePath = "/home/viking/Code/keycrypt_desktop/.env";
+  WidgetsFlutterBinding.ensureInitialized();
 
-  if (File(envFilePath).existsSync()) {
-    print(".env file found at $envFilePath, loading...");
-    await dotenv.load(fileName: envFilePath);
-  } else {
-    print("Error: .env file not found at $envFilePath");
-  }
+  databaseFactory = databaseFactoryFfi;
+
+  await dotenv.load(fileName: '.env');
+
+  // Now you can use the environment variables
+  print(dotenv.env['BASE_URL']);
 
   runApp(const KeyCrypt());
 }
@@ -31,7 +31,7 @@ class KeyCrypt extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        scaffoldBackgroundColor: Color(0xFF111518),
+        scaffoldBackgroundColor: const Color(0xFF111518),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(color: Color(0xFFFFFFFF)),
           bodyLarge: TextStyle(color: Color(0xFFFFFFFF)), // Default text color
