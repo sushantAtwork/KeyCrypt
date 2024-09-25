@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:keycrypt_desktop/pages/homePage.dart';
@@ -7,8 +6,6 @@ import 'package:keycrypt_desktop/utils/routes.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

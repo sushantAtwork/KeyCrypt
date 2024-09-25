@@ -23,7 +23,7 @@ class _HomepageState extends State<Homepage> {
   List<dynamic> _items = [];
 
   void saveToken() async {
-    final storage = FlutterSecureStorage();
+    final storage = const FlutterSecureStorage();
     try {
       await storage.write(key: 'token', value: widget.data);
     } catch (e) {
@@ -196,7 +196,12 @@ class _HomepageState extends State<Homepage> {
       ),
       body: Center(
         child: _isLoading
-            ? CircularProgressIndicator()
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
+                  backgroundColor: Colors.blueAccent,
+                ),
+              )
             : Column(
                 children: [
                   const SizedBox(height: 20),
@@ -204,13 +209,13 @@ class _HomepageState extends State<Homepage> {
                     child: _items.isEmpty
                         ? const Center(
                             child: Text('No items available'),
-                          ) // Display a message if no items
+                          )
                         : ListView.builder(
                             itemCount: _items.length,
                             itemBuilder: (context, index) {
                               return ListTile(
                                 title: Text(
-                                    style: TextStyle(color: Colors.white),
+                                    style: const TextStyle(color: Colors.white),
                                     _items[index] ?? 'No Value'),
                               );
                             },

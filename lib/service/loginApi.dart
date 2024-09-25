@@ -16,8 +16,6 @@ class LoginUser {
 
     final url = Uri.parse('$baseUrl/user/login');
 
-    print(url);
-
     try {
       final response = await http.post(
         url,

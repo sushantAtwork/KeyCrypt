@@ -11,7 +11,7 @@ Future<String?> getKeys() async {
   }
 
   final url = Uri.parse('$baseUrl/user/get/key');
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
   String? token = await storage.read(key: 'token');
 
   try {
@@ -19,7 +19,7 @@ Future<String?> getKeys() async {
       url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${token}'
+        'Authorization': 'Bearer $token'
       },
     );
 
