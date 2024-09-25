@@ -96,8 +96,10 @@ def get_keys_by_user(db: Session, user_email: str):
                 saved_key = models.Key()
                 saved_key.id = key.id
                 saved_key.name = key.key_name
-                # saved_key.value = crypt.decrypt(key.key_value)
-                saved_key.value = key.key_value
+                saved_key.value = crypt.decrypt(key.key_value)
+                # saved_key.value = key.key_value
+                saved_key.updated_at = key.updated_at
+                saved_key.created_at = key.created_at
                 key_list.append(saved_key)
     except Exception as e:
         raise e

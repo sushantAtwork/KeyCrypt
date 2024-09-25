@@ -46,6 +46,8 @@ class KeyResponse(BaseModel):
     key: str
     value: str
     type: str
+    updated_at: str
+    created_at: str
 
     class Config():
         orm_mode = True
