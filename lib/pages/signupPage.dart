@@ -28,8 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       String? password = _passwordController.text;
 
       try {
-        LoginUser loginUser = LoginUser();
-        String? message = await loginUser.loginUser(username, password);
+        String? message = await loginUser(username, password);
 
         if (!mounted) return; // Check if the widget is still mounted
 
@@ -52,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
 
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => Homepage(data: _token)),
+            MaterialPageRoute(builder: (context) => Homepage()),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

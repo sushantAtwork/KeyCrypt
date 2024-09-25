@@ -1,18 +1,15 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:keycrypt_desktop/modals/keyResponse.dart';
 import 'package:keycrypt_desktop/service/getKeys.dart';
+import 'package:keycrypt_desktop/utils/authService.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'dart:convert';
 
 class Homepage extends StatefulWidget {
-  final String data;
-
-  const Homepage({super.key, required this.data});
-
   @override
   State<Homepage> createState() => _HomepageState();
 }
@@ -21,17 +18,8 @@ class _HomepageState extends State<Homepage> {
   Database? _database;
   bool _isLoading = false;
   List<dynamic> _items = [];
-
-  void saveToken() async {
-    final storage = const FlutterSecureStorage();
-    try {
-      await storage.write(key: 'token', value: widget.data);
-    } catch (e) {
-      await storage.delete(key: 'token');
-    } finally {
-      await storage.write(key: 'token', value: widget.data);
-    }
-  }
+  AuthService authService = AuthService();
+  String _message = '';
 
 //initialize database
   Future<void> _initDB() async {
@@ -47,10 +35,13 @@ class _HomepageState extends State<Homepage> {
 
       if (dbExists) {
         print("Database already exists. Opening the database...");
+        _updateMessage("Database already exists. Opening the database....");
         _database = await openDatabase(path);
         print("Database Loaded!!!....");
+        _updateMessage("Database Loaded!!!....");
       } else {
         print("Database does not exist. Creating a new database...");
+        _updateMessage("Database does not exist. Creating a new database...");
         _database = await openDatabase(
           path,
           version: 1,
@@ -69,6 +60,7 @@ class _HomepageState extends State<Homepage> {
           },
         );
         print('Database created successfully');
+        _updateMessage("Database created successfully");
       }
 
       await _syncCloudData();
@@ -95,13 +87,20 @@ class _HomepageState extends State<Homepage> {
   }
 
 //insert items via cloud
-  Future<void> _syncItems(int id, String keys, String value) async {
+  Future<void> _syncItems(int id, String keys, String value, String createdAt,
+      String updatedAt) async {
     if (_database != null) {
       print('Inserting item: $value');
       if (keyExist(id) != true) {
         await _database!.insert(
           'items',
-          {'id': id, 'key_name': keys, 'key_value': value},
+          {
+            'id': id,
+            'key_name': keys,
+            'key_value': value,
+            'created_at': createdAt,
+            'updated_at': updatedAt
+          },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -111,16 +110,18 @@ class _HomepageState extends State<Homepage> {
 //load data from database
   Future<void> _loadItems() async {
     if (_database != null) {
-      final List<Map<dynamic, dynamic>> maps = await _database!.query('items');
-
+      final List<Map<String, dynamic>> maps = await _database!.query('items');
+      List<KeyResponse> keyList = maps.map((map) {
+        KeyResponse keyResponse = KeyResponse();
+        keyResponse.id = map['id'] as int?;
+        keyResponse.keyName = map['key_name'] as String?;
+        keyResponse.keyValue = map['key_value'] as String?;
+        keyResponse.createdAt = map['created_at'] as String?;
+        keyResponse.updatedAt = map['updated_at'] as String?;
+        return keyResponse; // Return the object
+      }).toList();
       setState(() {
-        _items = maps
-            .map((map) {
-              return map['key_value'];
-            })
-            .where((item) => item != null)
-            .cast<String>()
-            .toList();
+        _items = keyList;
       });
     }
   }
@@ -147,7 +148,8 @@ class _HomepageState extends State<Homepage> {
           for (var key in keyList) {
             print(
                 'ID: ${key['id']}, Name: ${key['name']}, Value: ${key['value']}');
-            await _syncItems(key['id'], key['name'], key['value']);
+            await _syncItems(key['id'], key['name'], key['value'],
+                key['updated_at'], key['created_at']);
           }
         } else {
           print('Unexpected response format: $parsedResponse');
@@ -173,10 +175,17 @@ class _HomepageState extends State<Homepage> {
     return false;
   }
 
+  //to show message while loading data
+  void _updateMessage(String newMessage) {
+    setState(() {
+      _message = newMessage;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    saveToken();
+    // authService.saveToken(widget.data);
     _initDB();
   }
 
@@ -196,31 +205,50 @@ class _HomepageState extends State<Homepage> {
       ),
       body: Center(
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
-                  backgroundColor: Colors.blueAccent,
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(_message)
+                  ],
                 ),
               )
             : Column(
                 children: [
                   const SizedBox(height: 20),
                   Expanded(
-                    child: _items.isEmpty
-                        ? const Center(
-                            child: Text('No items available'),
-                          )
-                        : ListView.builder(
-                            itemCount: _items.length,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                title: Text(
+                      child: _items.isEmpty
+                          ? const Center(
+                              child: Text('No items available'),
+                            )
+                          : ListView.builder(
+                              itemCount: _items.length,
+                              itemBuilder: (context, index) {
+                                // Ensure _items is a List<KeyResponse>
+                                final KeyResponse keyResponse = _items[index];
+
+                                return ListTile(
+                                  title: Text(
+                                    keyResponse.keyName ??
+                                        'No Name', // Display key_name or a default
                                     style: const TextStyle(color: Colors.white),
-                                    _items[index] ?? 'No Value'),
-                              );
-                            },
-                          ),
-                  ),
+                                  ),
+                                  subtitle: Text(
+                                    'Value: ${keyResponse.keyValue ?? 'No Value'}\n'
+                                    'Created At: ${keyResponse.createdAt ?? 'No Date'}\n'
+                                    'Updated At: ${keyResponse.updatedAt ?? 'No Date'}',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                );
+                              },
+                            ))
                 ],
               ),
       ),

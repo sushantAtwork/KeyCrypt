@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:keycrypt_desktop/pages/homePage.dart';
 import 'package:keycrypt_desktop/pages/loginPage.dart';
+import 'package:keycrypt_desktop/utils/authService.dart';
 import 'package:keycrypt_desktop/utils/routes.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -14,14 +14,23 @@ Future<void> main() async {
 
   await dotenv.load(fileName: '.env');
 
-  // Now you can use the environment variables
-  print(dotenv.env['BASE_URL']);
+  bool isAuthorized;
+  try {
+    AuthService auth = AuthService();
+    isAuthorized = await auth.isUserAuthorized();
+  } catch (e) {
+    // Log or handle the error as needed
+    print(e);
+    isAuthorized = false; // Default to unauthorized if there's an error
+  }
 
-  runApp(const KeyCrypt());
+  runApp(KeyCrypt(isAuthorized: isAuthorized));
 }
 
 class KeyCrypt extends StatelessWidget {
-  const KeyCrypt({super.key});
+  final dynamic isAuthorized;
+
+  const KeyCrypt({Key? key, required this.isAuthorized});
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +45,10 @@ class KeyCrypt extends StatelessWidget {
         ),
       ),
       initialRoute: "/login",
+      home: isAuthorized ? Homepage() : LoginPage(),
       routes: {
         MyRoutes.loginPageRoute: (context) => const LoginPage(),
-        MyRoutes.homePageRoute: (context) => const Homepage(data: ''),
+        MyRoutes.homePageRoute: (context) => Homepage(),
       },
     );
   }
