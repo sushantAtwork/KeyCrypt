@@ -6,8 +6,9 @@ from app.utils import (
     verify_password,
     get_current_date_time,
     validateEmail,
-    validatePassword
+    validatePassword,
 )
+from app.auth import verify_token
 from . import models, schemas
 from .exception import MissingKeyFieldException, InvalidValidation, EntityNotExist
 
@@ -16,6 +17,17 @@ crypt = EncryptionUtil()
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
+
+
+def authorize_user(token: str):
+    try:
+        tokenData = verify_token(token=token)
+        if tokenData is None:
+            return False
+        else:
+            return True
+    except:
+        return False
 
 
 def get_user_by_email(db: Session, email: str):
@@ -31,9 +43,15 @@ def get_users(db: Session, skip: int = 0, limit: int = 10):
 
 
 def create_user(db: Session, user: schemas.UserRequest):
-    if user.email is '' or user.username is '' or user.hashed_password is '' or user.phone_number is '':
+    if (
+        user.email is ""
+        or user.username is ""
+        or user.hashed_password is ""
+        or user.phone_number is ""
+    ):
         raise MissingKeyFieldException(
-            "One or more required fields (email, username, password, phone_number) are missing.")
+            "One or more required fields (email, username, password, phone_number) are missing."
+        )
     if validateEmail(user.email) is False:
         raise InvalidValidation("Email is not validated!!!!")
     if validatePassword(user.hashed_password) is False:
@@ -44,7 +62,7 @@ def create_user(db: Session, user: schemas.UserRequest):
         hashed_password=hash_password(user.hashed_password),
         is_active=True,
         phone_number=user.phone_number,
-        created_at=get_current_date_time()
+        created_at=get_current_date_time(),
     )
     db.add(db_user)
     db.commit()
@@ -122,14 +140,16 @@ def create_key(db: Session, key: schemas.KeyRequest, user_email: str):
     if user is None:
         raise Exception
     else:
-        if key.key is '' or key.value is '' or key.type is '':
-            raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
+        if key.key is "" or key.value is "" or key.type is "":
+            raise MissingKeyFieldException(
+                "One or more required fields (key, value, type) are missing."
+            )
         db_key = models.Key(
             key_name=key.key,
             key_value=crypt.encrypt(key.value),
             key_type=key.type,
             user_id=user.id,
-            created_at=get_current_date_time()
+            created_at=get_current_date_time(),
         )
     try:
         db.add(db_key)
@@ -179,14 +199,17 @@ def create_key(db: Session, key: schemas.KeyRequest, user_email: str):
 #         print(f"error {e}")
 #         raise
 
+
 def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: str):
     try:
         saved_key = get_key_by_id(db=db, key_id=key_id)
         db_user = get_user_by_email(db=db, email=user_email)
         if db_user is None:
-            raise EntityNotExist("User does\'nt exist!!!")
-        if key.key is '' or key.value is '' or key.type is '':
-            raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
+            raise EntityNotExist("User does'nt exist!!!")
+        if key.key is "" or key.value is "" or key.type is "":
+            raise MissingKeyFieldException(
+                "One or more required fields (key, value, type) are missing."
+            )
         if saved_key is None:
             raise EntityNotExist("Key not found!!!!")
         else:
@@ -211,7 +234,7 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
     except Exception as e:
         db.rollback()
         print(f"Error: {e}")
-        raise Exception(f'Error in updating keys : {e}')
+        raise Exception(f"Error in updating keys : {e}")
 
 
 def delete_key(db: Session, key_id: int, user_email: str):
@@ -219,7 +242,7 @@ def delete_key(db: Session, key_id: int, user_email: str):
     if user is None:
         raise EntityNotExist("User not exist!!!!")
     else:
-        if key_id is '':
+        if key_id is "":
             raise MissingKeyFieldException("Key ID is missing.")
         else:
             key_exist = get_key_by_id(db=db, key_id=key_id)
