@@ -1,15 +1,18 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
+import 'package:keycrypt_desktop/component/appBar.dart';
+import 'package:keycrypt_desktop/component/snackBar.dart';
 import 'package:keycrypt_desktop/modals/keyResponse.dart';
+import 'package:keycrypt_desktop/service/createKey.dart';
 import 'package:keycrypt_desktop/service/getKeys.dart';
-import 'package:keycrypt_desktop/utils/authService.dart';
+import 'package:keycrypt_desktop/service/authService.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 import 'dart:convert';
 
 class Homepage extends StatefulWidget {
+  const Homepage({super.key});
+
   @override
   State<Homepage> createState() => _HomepageState();
 }
@@ -20,6 +23,20 @@ class _HomepageState extends State<Homepage> {
   List<dynamic> _items = [];
   AuthService authService = AuthService();
   String _message = '';
+  final _keyNameController = TextEditingController();
+  final _keyValueController = TextEditingController();
+  final _keyTypeController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  String _token = '';
+  Color _snackBarColor = Colors.grey;
+
+  bool _isLoggedIn = true;
+
+  void _refreshAuthState() {
+    setState(() {
+      _isLoggedIn = true;
+    });
+  }
 
 //initialize database
   Future<void> _initDB() async {
@@ -175,6 +192,61 @@ class _HomepageState extends State<Homepage> {
     return false;
   }
 
+  Future<void> _createKey(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _message = '';
+        _isLoading = true;
+      });
+
+      String? keyName = _keyNameController.text;
+      String? keyValue = _keyValueController.text;
+      String? keyType = _keyTypeController.text;
+
+      try {
+        String? message = await createKey(keyName, keyValue, keyType);
+
+        if (!mounted) return;
+
+        setState(() {
+          if (message != null && !message.contains('!')) {
+            _token = message;
+            _message = 'Login successful';
+            _snackBarColor = Colors.green;
+          } else {
+            _message = 'Error: $message';
+            _snackBarColor = Colors.red;
+          }
+        });
+
+        if (_message == 'Login successful') {
+          showCustomSnackbar(context, _message, _snackBarColor);
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
+            context as BuildContext,
+            MaterialPageRoute(builder: (context) => const Homepage()),
+          );
+        } else {
+          showCustomSnackbar(context as BuildContext, _message, _snackBarColor);
+        }
+      } catch (e) {
+        if (!mounted) return; // Check again in case of an error
+
+        setState(() {
+          _message = 'An error occurred: $e';
+        });
+        showCustomSnackbar(context as BuildContext, _message, _snackBarColor);
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
   //to show message while loading data
   void _updateMessage(String newMessage) {
     setState(() {
@@ -185,7 +257,7 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
-    // authService.saveToken(widget.data);
+    print(_isLoggedIn);
     _initDB();
   }
 
@@ -199,7 +271,11 @@ class _HomepageState extends State<Homepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        title: CustomAppBar(
+          title: 'Home',
+          isAuthenticated: _isLoggedIn,
+          onLogout: _refreshAuthState,
+        ),
         titleTextStyle: Theme.of(context).textTheme.bodyLarge,
         backgroundColor: const Color(0xFF111518),
       ),
@@ -213,7 +289,7 @@ class _HomepageState extends State<Homepage> {
                       valueColor: AlwaysStoppedAnimation(Colors.amberAccent),
                       backgroundColor: Colors.blueAccent,
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 10,
                     ),
                     Text(_message)
@@ -224,34 +300,112 @@ class _HomepageState extends State<Homepage> {
                 children: [
                   const SizedBox(height: 20),
                   Expanded(
-                      child: _items.isEmpty
-                          ? const Center(
-                              child: Text('No items available'),
-                            )
-                          : ListView.builder(
-                              itemCount: _items.length,
-                              itemBuilder: (context, index) {
-                                // Ensure _items is a List<KeyResponse>
-                                final KeyResponse keyResponse = _items[index];
+                    child: _items.isEmpty
+                        ? const Center(
+                            child: Text('No items available'),
+                          )
+                        : ListView.builder(
+                            itemCount: _items.length,
+                            itemBuilder: (context, index) {
+                              // Ensure _items is a List<KeyResponse>
+                              final KeyResponse keyResponse = _items[index];
 
-                                return ListTile(
-                                  title: Text(
-                                    keyResponse.keyName ??
-                                        'No Name', // Display key_name or a default
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  subtitle: Text(
-                                    'Value: ${keyResponse.keyValue ?? 'No Value'}\n'
-                                    'Created At: ${keyResponse.createdAt ?? 'No Date'}\n'
-                                    'Updated At: ${keyResponse.updatedAt ?? 'No Date'}',
-                                    style: const TextStyle(color: Colors.grey),
-                                  ),
-                                );
-                              },
-                            ))
+                              return ListTile(
+                                title: Text(
+                                  keyResponse.keyName ??
+                                      'No Name', // Display key_name or a default
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Value: ${keyResponse.keyValue ?? 'No Value'}\n'
+                                  'Created At: ${keyResponse.createdAt ?? 'No Date'}\n'
+                                  'Updated At: ${keyResponse.updatedAt ?? 'No Date'}',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _showDialog(context);
+                    },
+                    child: const Text('Create Key'),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
       ),
+    );
+  }
+
+  void _showDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize:
+                      MainAxisSize.min, // Use minimum size for the dialog
+                  children: [
+                    const Center(
+                      child: Text(
+                        'Create Key',
+                        style: TextStyle(
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    _buildTextField(_keyNameController, 'Key Name'),
+                    const SizedBox(height: 16),
+                    _buildTextField(_keyValueController, 'Key Value'),
+                    const SizedBox(height: 16),
+                    _buildTextField(_keyTypeController, 'Key Type'),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _createKey(context);
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              )),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.text,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter $label';
+        }
+        return null;
+      },
     );
   }
 }

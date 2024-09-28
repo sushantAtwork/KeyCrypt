@@ -11,7 +11,7 @@ Future<String?> getKeys() async {
   }
 
   final url = Uri.parse('$baseUrl/user/get/key');
-  final storage = const FlutterSecureStorage();
+  const storage = FlutterSecureStorage();
   String? token = await storage.read(key: 'token');
 
   try {
@@ -45,3 +45,5 @@ Future<String?> getKeys() async {
     return 'Error occurred during login: $e';
   }
 }
+
+
