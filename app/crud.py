@@ -136,68 +136,57 @@ def get_key_by_id(db: Session, key_id: int):
 
 
 def create_key(db: Session, key: schemas.KeyRequest, user_email: str):
-    user = get_user_by_email(db=db, email=user_email)
-    if user is None:
-        raise Exception
-    else:
-        if key.key is "" or key.value is "" or key.type is "":
+    try:
+        # Fetch user by email
+        user = get_user_by_email(db=db, email=user_email)
+        if user is None:
+            raise Exception("User not found.")
+
+        # Validate required fields
+        if not key.key or not key.value or not key.type:
             raise MissingKeyFieldException(
                 "One or more required fields (key, value, type) are missing."
             )
+
+        # Create a new key entry
+        current_time = get_current_date_time()  # Get the current time for both fields
         db_key = models.Key(
             key_name=key.key,
             key_value=crypt.encrypt(key.value),
             key_type=key.type,
             user_id=user.id,
-            created_at=get_current_date_time(),
+            created_at=current_time,
+            updated_at=current_time,  # Set updated_at
         )
-    try:
+
+        # Add and commit the new key to the database
         db.add(db_key)
         db.commit()
         db.refresh(db_key)
+
+        # Prepare the response
         key_response = schemas.KeyResponse(
             id=db_key.id,
             key=db_key.key_name,
             value=db_key.key_value,
             type=db_key.key_type,
+            created_at=db_key.created_at,  # Use db_key created_at
+            updated_at=(
+                db_key.updated_at if db_key.updated_at else current_time
+            ),  # Ensure updated_at is valid
         )
+
         return key_response
-    except Exception as e:
-        db.rollback()
-        print(f"error {e}")
+
+    except MissingKeyFieldException as e:
+        print(f"Validation error: {e}")
         raise
 
-
-# def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: str):
-#     saved_key = get_key_by_id(db=db, key_id=key_id)
-#     db_user = get_user_by_email(db=db, email=user_email)
-#     if db_user is None:
-#         raise Exception
-#     else:
-#         if key.key is '' or key.value is '' or key.type is '':
-#             raise MissingKeyFieldException("One or more required fields (key, value, type) are missing.")
-#         else:
-#             print(f'{saved_key} adsad {key}' )
-#             saved_key.key_name = key.key_name
-#             saved_key.key_value = crypt.encrypt(key.value)
-#             saved_key.key_type = key.type
-#             saved_key.user_id = db_user.id
-#             saved_key.updated_at = get_current_date_time()
-#     try:
-#         db.add(saved_key)
-#         db.commit()
-#         db.refresh(saved_key)
-#         key_response = schemas.KeyResponse(
-#             id=saved_key.id,
-#             key=saved_key.key_name,
-#             value=saved_key.key_value,
-#             type=saved_key.key_type,
-#         )
-#         return key_response
-#     except Exception as e:
-#         db.rollback()
-#         print(f"error {e}")
-#         raise
+    except Exception as e:
+        print("An error occurred during key creation.")
+        db.rollback()
+        print(f"Error details: {e}")
+        raise
 
 
 def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: str):
@@ -213,7 +202,7 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
         if saved_key is None:
             raise EntityNotExist("Key not found!!!!")
         else:
-            saved_key.name = key.key
+            saved_key.key_name = key.key
             saved_key.key_value = crypt.encrypt(key.value)
             saved_key.key_type = key.type
             saved_key.user_id = db_user.id
@@ -223,12 +212,15 @@ def update_key(db: Session, key_id: int, key: schemas.KeyRequest, user_email: st
             db.commit()
             db.refresh(saved_key)
 
-            # Correct attribute names for KeyResponse
         key_response = schemas.KeyResponse(
             id=saved_key.id,
             key=saved_key.key_name,
             value=saved_key.key_value,
             type=saved_key.key_type,
+            created_at=saved_key.created_at,
+            updated_at=(
+                saved_key.updated_at if saved_key.updated_at else current_time
+            ),
         )
         return key_response
     except Exception as e:
